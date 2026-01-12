@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>销售网站管理后台 - ProxyAdmin</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <!-- 顶部导航栏 -->
+    <header class="header">
+        <div class="logo-area"><i class="fas fa-cube logo-icon"></i> ProxyAdmin</div>
+        <div class="admin-info">
+            <div class="avatar">A</div>
+            <span style="color: var(--text-main);">Admin</span>
+            <button class="logout-btn" onclick="alert('退出登录')"><i class="fas fa-sign-out-alt"></i> 退出</button>
+        </div>
+    </header>
+
+    <!-- 左侧菜单栏 -->
+    <nav class="sidebar">
+        <div class="menu-item active" onclick="switchTab('dashboard')" id="nav-dashboard"><i class="fas fa-chart-pie"></i> 仪表盘</div>
+        <div class="menu-item" onclick="switchTab('orders')" id="nav-orders"><i class="fas fa-clipboard-list"></i> 订单总表</div>
+        <div class="menu-item" onclick="switchTab('members')" id="nav-members"><i class="fas fa-users"></i> 会员管理</div>
+        <div class="menu-item" onclick="switchTab('daily')" id="nav-daily"><i class="fas fa-chart-line"></i> 每日数据概览</div>
+        <div class="menu-item" onclick="switchTab('settings')" id="nav-settings"><i class="fas fa-cog"></i> 系统设置</div>
+    </nav>
+
+    <!-- 主内容区域 -->
+    <main class="main-content">
+        
+        <!-- 1. 仪表盘页面 -->
+        <div id="dashboard-view" class="page-view active">
+            <div class="breadcrumb">首页 > <span class="current">仪表盘</span></div>
+            <div class="cards-container">
+                <div class="data-card" id="card-sales">
+                    <div class="card-header">
+                        <span><i class="fas fa-dollar-sign"></i> 总销售额</span>
+                        <select class="period-select" onchange="updateCardData(this, 'sales')">
+                            <option value="week" selected>本周</option>
+                            <option value="month">本月</option>
+                            <option value="year">本年</option>
+                            <option value="all">全部</option>
+                        </select>
+                    </div>
+                    <div class="card-value">¥34,567.00</div>
+                    <div class="card-footer"><span class="period-label">本周数据</span><span class="trend-up">↑ 12.5% 较上周</span></div>
+                </div>
+                <div class="data-card" id="card-orders">
+                    <div class="card-header">
+                        <span><i class="fas fa-box"></i> 总订单量</span>
+                        <select class="period-select" onchange="updateCardData(this, 'orders')">
+                            <option value="week" selected>本周</option>
+                            <option value="month">本月</option>
+                            <option value="year">本年</option>
+                            <option value="all">全部</option>
+                        </select>
+                    </div>
+                    <div class="card-value">345 单</div>
+                    <div class="card-footer"><span class="period-label">本周数据</span><span class="trend-down">↓ 3.2% 较上周</span></div>
+                </div>
+                <div class="data-card" id="card-users">
+                    <div class="card-header">
+                        <span><i class="fas fa-user-friends"></i> 总注册用户</span>
+                        <select class="period-select" onchange="updateCardData(this, 'users')">
+                            <option value="week" selected>本周</option>
+                            <option value="month">本月</option>
+                            <option value="year">本年</option>
+                            <option value="all">全部</option>
+                        </select>
+                    </div>
+                    <div class="card-value">128 人</div>
+                    <div class="card-footer"><span class="period-label">本周新增</span><span class="trend-up">↑ 5.8% 较上周</span></div>
+                </div>
+                <div class="data-card">
+                    <div class="card-header"><span><i class="fas fa-wallet"></i> 钱包余额</span></div>
+                    <div class="card-value">¥987,654.32</div>
+                    <div class="card-footer"><span style="color: var(--text-hint);">实时数据</span></div>
+                </div>
+            </div>
+            <div class="chart-section">
+                <div class="section-header">
+                    <div class="section-title">数据趋势分析</div>
+                    <div class="chart-controls">
+                        <div class="time-tabs" id="trendTimeTabs">
+                            <span onclick="changeTrendPeriod(this,7)">近7天</span>
+                            <span onclick="changeTrendPeriod(this,14)">近14天</span>
+                            <span class="active" onclick="changeTrendPeriod(this,30)">近30天</span>
+                        </div>
+                    </div>
+                </div>
+                <div id="trendChart" style="width: 100%; height: 350px;"></div>
+            </div>
+            <div class="pie-charts-container">
+                <div class="pie-card">
+                    <div class="section-header">
+                        <div class="section-title">销售额构成分析</div>
+                        <div class="time-tabs" id="salesPieTabs">
+                            <span onclick="changeSalesPiePeriod(this, 7)">近7天</span>
+                            <span onclick="changeSalesPiePeriod(this, 14)">近14天</span>
+                            <span class="active" onclick="changeSalesPiePeriod(this, 30)">近30天</span>
+                        </div>
+                    </div>
+                    <div id="salesPieChart" style="width: 100%; height: 280px;"></div>
+                </div>
+                <div class="pie-card">
+                    <div class="section-header">
+                        <div class="section-title">订单量构成分析</div>
+                        <div class="time-tabs" id="ordersPieTabs">
+                            <span onclick="changeOrdersPiePeriod(this, 7)">近7天</span>
+                            <span onclick="changeOrdersPiePeriod(this, 14)">近14天</span>
+                            <span class="active" onclick="changeOrdersPiePeriod(this, 30)">近30天</span>
+                        </div>
+                    </div>
+                    <div id="ordersPieChart" style="width: 100%; height: 280px;"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. 订单总表页面 -->
+        <div id="orders-view" class="page-view">
+            <div class="breadcrumb">首页 > <span class="current">订单总表</span></div>
+            <div class="filter-section">
+                <div class="filter-row">
+                    <div><span class="form-label-inline">起始时间:</span><input type="date" id="orderStartDate" class="input-control" style="width: 160px; cursor: pointer;"></div>
+                    <div><span class="form-label-inline">结束时间:</span><input type="date" id="orderEndDate" class="input-control" style="width: 160px; cursor: pointer;"></div>
+                    <div><span class="form-label-inline">套餐类型:</span>
+                        <select id="orderPkgType" class="input-control" style="width: 140px;">
+                            <option value="">全部</option>
+                            <option value="residential">动态住宅代理</option>
+                            <option value="unlimited">无限量代理</option>
+                        </select>
+                    </div>
+                    <div><span class="form-label-inline">支付状态:</span>
+                        <select id="orderPayStatus" class="input-control" style="width: 120px;">
+                            <option value="">全部</option>
+                            <option value="paid">已支付</option>
+                            <option value="unpaid">未支付</option>
+                            <option value="refunded">已退款</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="filter-row">
+                    <div class="search-input-wrapper"><i class="fas fa-search"></i><input type="text" id="orderSearchKeyword" class="input-control" placeholder="请输入用户名/邮箱/订单号" style="width: 280px;"></div>
+                    <button class="btn btn-primary"><i class="fas fa-search"></i> 查询</button>
+                    <button class="btn btn-secondary" onclick="resetOrderFilters()">重置</button>
+                </div>
+                <div class="filter-row">
+                    <button class="btn btn-primary" onclick="openModal('createOrderModal')"><i class="fas fa-plus"></i> 创建订单</button>
+                    <button class="btn btn-secondary" onclick="exportData('orders')"><i class="fas fa-download"></i> 导出</button>
+                </div>
+            </div>
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr><th>用户名</th><th>邮箱</th><th>订单号</th><th>套餐类型 <i class="fas fa-sort"></i></th><th>服务器配置</th><th>资源量</th><th style="text-align:right;">订单金额</th><th style="text-align:right;">支付金额</th><th>状态</th><th>支付时间</th><th>订单来源</th></tr>
+                    </thead>
+                    <tbody id="ordersTableBody">
+                        <!-- 由JS动态渲染 -->
+                    </tbody>
+                </table>
+                <div class="pagination">
+                    <div class="page-info">共 1,234 条</div>
+                    <select class="input-control" style="width: 100px;"><option>20条/页</option><option>50条/页</option><option>100条/页</option></select>
+                    <div class="page-btn-group">
+                        <div class="page-btn disabled"><i class="fas fa-angle-left"></i></div>
+                        <div class="page-btn active">1</div><div class="page-btn">2</div><div class="page-btn">3</div><div class="page-btn">...</div><div class="page-btn">62</div>
+                        <div class="page-btn"><i class="fas fa-angle-right"></i></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. 会员管理页面 -->
+        <div id="members-view" class="page-view">
+            <div class="breadcrumb">首页 > <span class="current">会员管理</span></div>
+            <div class="filter-section">
+                <div class="filter-row">
+                    <div><span class="form-label-inline">起始时间:</span><input type="date" id="memberStartDate" class="input-control" style="width: 160px; cursor: pointer;"></div>
+                    <div><span class="form-label-inline">结束时间:</span><input type="date" id="memberEndDate" class="input-control" style="width: 160px; cursor: pointer;"></div>
+                    <div class="search-input-wrapper"><i class="fas fa-user"></i><input type="text" class="input-control" placeholder="用户名搜索" style="width: 180px;"></div>
+                    <div class="search-input-wrapper"><i class="fas fa-envelope"></i><input type="text" class="input-control" placeholder="邮箱搜索" style="width: 200px;"></div>
+                    <button class="btn btn-primary"><i class="fas fa-search"></i> 查询</button>
+                    <button class="btn btn-secondary">重置</button>
+                </div>
+                <div class="filter-row">
+                    <button class="btn btn-secondary" onclick="exportData('members')"><i class="fas fa-download"></i> 导出</button>
+                </div>
+            </div>
+            <div class="table-container">
+                <table class="data-table">
+                    <thead><tr><th>用户名</th><th>邮箱</th><th>密码</th><th style="text-align:right;">住宅代理余额</th><th style="text-align:right;">无限量余额</th><th style="text-align:right;">总花费</th><th>注册时间</th><th>状态</th><th>操作</th></tr></thead>
+                    <tbody id="membersTableBody">
+                        <!-- 由JS动态渲染 -->
+                    </tbody>
+                </table>
+                <div class="pagination">
+                    <div class="page-info">共 5,678 条</div>
+                    <select class="input-control" style="width: 100px;"><option>20条/页</option><option>50条/页</option><option>100条/页</option></select>
+                    <div class="page-btn-group">
+                        <div class="page-btn disabled"><i class="fas fa-angle-left"></i></div>
+                        <div class="page-btn active">1</div><div class="page-btn">2</div><div class="page-btn">3</div><div class="page-btn">...</div><div class="page-btn">284</div>
+                        <div class="page-btn"><i class="fas fa-angle-right"></i></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. 每日数据概览页面 -->
+        <div id="daily-view" class="page-view">
+            <div class="breadcrumb">首页 > <span class="current">每日数据概览</span></div>
+            <div class="filter-section">
+                <div class="filter-row">
+                    <div><span class="form-label-inline">起始时间:</span><input type="date" id="dailyStartDate" class="input-control" style="width: 160px; cursor: pointer;"></div>
+                    <div><span class="form-label-inline">结束时间:</span><input type="date" id="dailyEndDate" class="input-control" style="width: 160px; cursor: pointer;"></div>
+                    <button class="btn btn-primary"><i class="fas fa-search"></i> 查询</button>
+                    <button class="btn btn-secondary">重置</button>
+                </div>
+                <div class="filter-row">
+                    <button class="btn btn-secondary" onclick="exportData('daily')"><i class="fas fa-download"></i> 导出</button>
+                </div>
+            </div>
+            <div class="summary-grid">
+                <div class="summary-card"><div class="summary-info"><h4>所选时段总订单量</h4><div class="summary-value">1,234 单</div></div><div class="summary-icon"><i class="fas fa-box"></i></div></div>
+                <div class="summary-card"><div class="summary-info"><h4>所选时段总销售额</h4><div class="summary-value">¥123,456.78</div></div><div class="summary-icon"><i class="fas fa-coins"></i></div></div>
+                <div class="summary-card"><div class="summary-info"><h4>总注册人数</h4><div class="summary-value">567 人</div></div><div class="summary-icon"><i class="fas fa-users"></i></div></div>
+                <div class="summary-card"><div class="summary-info"><h4>平均日销售额</h4><div class="summary-value">¥4,115.89</div></div><div class="summary-icon" style="background:#fff7e6; color:#fa8c16;"><i class="fas fa-chart-bar"></i></div></div>
+            </div>
+            <div class="table-container">
+                <table class="data-table">
+                    <thead><tr>
+                        <th style="text-align:center; width:140px;">日期 <i class="fas fa-sort-down"></i></th>
+                        <th style="text-align:right;">总订单量</th><th style="text-align:right;">总销售额</th><th style="text-align:right;">注册人数</th>
+                        <th style="text-align:right;">动态住宅订单</th><th style="text-align:right;">动态住宅销售额</th>
+                        <th style="text-align:right;">无限量订单</th><th style="text-align:right;">无限量销售额</th>
+                    </tr></thead>
+                    <tbody id="dailyTableBody">
+                        <!-- 由JS动态渲染 -->
+                    </tbody>
+                </table>
+                <div class="pagination" style="justify-content: space-between;">
+                    <div style="display: flex; align-items: center; gap: 16px;">
+                        <span class="page-info">共 30 天</span>
+                        <select class="input-control" style="width: 110px;"><option>10条/页</option><option selected>15条/页</option><option>30条/页</option></select>
+                    </div>
+                    <div class="page-btn-group">
+                        <div class="page-btn disabled"><i class="fas fa-angle-double-left"></i></div>
+                        <div class="page-btn disabled"><i class="fas fa-angle-left"></i></div>
+                        <div class="page-btn active">1</div><div class="page-btn">2</div>
+                        <div class="page-btn"><i class="fas fa-angle-right"></i></div>
+                        <div class="page-btn"><i class="fas fa-angle-double-right"></i></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 5. 系统设置页面 -->
+        <div id="settings-view" class="page-view">
+            <div class="breadcrumb">首页 > <span class="current">系统设置</span></div>
+            
+            <!-- 动态住宅代理配置 -->
+            <div class="config-card">
+                <div class="card-header-row">
+                    <div class="card-title"><i class="fas fa-server"></i> 动态住宅代理配置</div>
+                    <button class="btn btn-primary" onclick="openModal('residentialModal', 'add')"><i class="fas fa-plus"></i> 添加套餐</button>
+                </div>
+                <table class="data-table">
+                    <thead><tr><th width="120">套餐名称</th><th width="100" class="align-center">数量(GB)</th><th width="100" class="align-right">单价($)</th><th width="100" class="align-right">总价($)</th><th width="100" class="align-center">时长(天)</th><th width="140">创建时间</th><th width="80">状态</th><th width="180">操作</th></tr></thead>
+                    <tbody id="residentialTableBody">
+                        <!-- 由JS动态渲染 -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- 无限量代理配置 -->
+            <div class="config-card">
+                <div class="card-header-row">
+                    <div class="card-title"><i class="fas fa-infinity"></i> 无限量代理配置</div>
+                    <button class="btn btn-primary" onclick="openUnlimitedAddModal()"><i class="fas fa-plus"></i> 添加套餐</button>
+                </div>
+                <table class="data-table">
+                    <thead><tr><th width="100">套餐名称</th><th width="60" class="align-center">天数</th><th width="80" class="align-right">基础价格</th><th width="160">基础配置</th><th width="80" class="align-right">CPU升级</th><th width="100" class="align-right">带宽升级</th><th width="140">最后编辑时间</th><th width="70">状态</th><th width="150">操作</th></tr></thead>
+                    <tbody id="unlimitedTableBody">
+                        <!-- 由JS动态渲染 -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- 管理员账户管理 -->
+            <div class="config-card">
+                <div class="card-header-row">
+                    <div class="card-title"><i class="fas fa-user-shield"></i> 管理员账户管理</div>
+                    <button class="btn btn-primary" onclick="openModal('adminModal', 'add')"><i class="fas fa-plus"></i> 创建管理员</button>
+                </div>
+                <table class="data-table">
+                    <thead><tr><th width="150">管理员用户名</th><th width="200">邮箱</th><th width="120">密码</th><th width="120">角色</th><th width="140">创建时间</th><th width="80">状态</th><th width="150">操作</th></tr></thead>
+                    <tbody id="adminTableBody">
+                        <!-- 由JS动态渲染 -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <!-- 所有弹窗模板放在单独文件中引入 -->
+    <div id="modals-container"></div>
+
+    <!-- 按顺序加载JS文件 -->
+    <script src="js/data/config.js"></script>
+    <script src="js/data/mock-data.js"></script>
+    <script src="js/utils/helpers.js"></script>
+    <script src="js/modules/navigation.js"></script>
+    <script src="js/modules/modal.js"></script>
+    <script src="js/modules/dashboard.js"></script>
+    <script src="js/modules/orders.js"></script>
+    <script src="js/modules/members.js"></script>
+    <script src="js/modules/settings.js"></script>
+    <script src="js/charts/charts.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
